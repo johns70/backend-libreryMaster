@@ -8,7 +8,7 @@ import { router } from "./Router/librery-router.js";
 
 //Configuracion inicial
 const app = express()
-app.set("port", 4002)
+app.set("port", process.env.PORT || 4002)
 app.use(cors())
 
 
