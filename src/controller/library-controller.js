@@ -5,7 +5,7 @@ const pool = await connection()
 //GET
 export const getLibros = async(req, res) => {
     try {
-        const [result] = await pool.query('SELECT * FROM libros')
+        const [result] = await pool.query('SELECT l.id_libro, l.titulo, l.descripcion, l.precio, a.nombre AS nombre_autor FROM libros l INNER JOIN libros_autores la ON l.id_libro = la.id_libro INNER JOIN autores a ON la.id_autor = a.id_autor;')
         res.send(result)
     } catch(error) {
         console.log(error.message)
