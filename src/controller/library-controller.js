@@ -5,7 +5,7 @@ const pool = await connection()
 //GET
 export const getLibros = async(req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM libros')
+        const [result] = await pool.query('SELECT * FROM libros')
         res.send(result)
     } catch(error) {
         console.log(error.message)
@@ -57,7 +57,7 @@ export const getLibrosFiltroAvanzado = async (req, res) => {
             parametros.push(categoria);
         }
 
-        const resultado = await pool.query(sqlQuery, parametros);
+        const [resultado] = await pool.query(sqlQuery, parametros);
 
         if(resultado.length <= 0 ) {
             res.send(`No existe  ${autor, editorial, categoria} `)
