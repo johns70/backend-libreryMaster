@@ -5,7 +5,7 @@ const pool = await connection()
 //GET
 export const getLibros = async(req, res) => {
     try {
-        const [result] = await pool.query('SELECT l.id_libro, l.titulo, l.descripcion, l.precio, a.nombre AS nombre_autor FROM libros l INNER JOIN libros_autores la ON l.id_libro = la.id_libro INNER JOIN autores a ON la.id_autor = a.id_autor;')
+        const [result] = await pool.query('SELECT l.id_libro, l.titulo, l.descripcion, l.precio, l.url_image AS imagen, a.nombre AS nombre_autor FROM libros l INNER JOIN libros_autores la ON l.id_libro = la.id_libro INNER JOIN autores a ON la.id_autor = a.id_autor;')
         res.send(result)
     } catch(error) {
         console.log(error.message)
@@ -22,7 +22,7 @@ export const getLibrosFiltroAvanzado = async (req, res) => {
                 libros.id_libro,
                 libros.titulo,
                 libros.precio,
-                libros.url_image AS imagen
+                libros.url_image AS imagen,
                 autores.nombre AS nombre_autor,
                 editoriales.nombre AS nombre_editorial,
                 categorias.nombre AS nombre_categorias
