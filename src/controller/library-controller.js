@@ -72,18 +72,3 @@ export const getLibrosFiltroAvanzado = async (req, res) => {
         res.status(500).json({ error: "Error en el servidor" });
     }
 };
-
-//    SELECT 
-//                 libros.id_libro, 
-//                 libros.titulo, 
-//                 libros.precio, 
-//                 editoriales.nombre AS nombre_editorial, 
-//                 autores.nombre AS nombre_autor, 
-//                 categorias.nombre AS nombre_genero
-//             FROM libros
-//             LEFT JOIN editoriales ON libros.id_editorial = editoriales.id_editorial
-//             LEFT JOIN libros_autores ON libros.id_libro = libros_autores.id_libro
-//             LEFT JOIN autores ON libros_autores.id_autor = autores.id_autor
-//             LEFT JOIN libros_categorias ON libros.id_libro = libros_categorias.id_libro
-//             LEFT JOIN categorias ON libros_categorias.id_categoria = categorias.id_categoria
-//             WHERE 1=1 AND libros_autores.id_autor = 8
