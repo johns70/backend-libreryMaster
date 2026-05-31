@@ -22,6 +22,7 @@ export const getLibrosFiltroAvanzado = async (req, res) => {
                 libros.id_libro,
                 libros.titulo,
                 libros.precio,
+                libros.url_image AS imagen
                 autores.nombre AS nombre_autor,
                 editoriales.nombre AS nombre_editorial,
                 categorias.nombre AS nombre_categorias
