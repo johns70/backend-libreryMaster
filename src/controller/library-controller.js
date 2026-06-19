@@ -4,8 +4,28 @@ const pool = await connection()
 
 //GET
 export const getLibros = async(req, res) => {
+
+    let limit = req.query.limit ? parseInt( req.query.limit ) : 8;
+
+    if(isNaN(limit) || limit <= 0) {
+       return res.status(400).json({ error: "el limite debe ser un numero valido" })
+    }
+
     try {
-        const [result] = await pool.query('SELECT l.id_libro, l.titulo, l.descripcion, l.precio, l.url_image AS imagen, a.nombre AS nombre_autor FROM libros l INNER JOIN libros_autores la ON l.id_libro = la.id_libro INNER JOIN autores a ON la.id_autor = a.id_autor;')
+        const [result] = await pool.query(`
+    SELECT 
+        l.id_libro, 
+        l.titulo, 
+        l.descripcion, 
+        l.precio, 
+        l.url_image AS imagen, 
+        a.nombre AS nombre_autor 
+    FROM libros l 
+    INNER JOIN libros_autores la ON l.id_libro = la.id_libro 
+    INNER JOIN autores a ON la.id_autor = a.id_autor 
+    ORDER BY RAND()
+    LIMIT ? ;
+`, [limit])
         res.send(result)
     } catch(error) {
         console.log(error.message)
