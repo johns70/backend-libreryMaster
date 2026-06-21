@@ -1,42 +1,17 @@
-import { connection } from "../../db/database.js"
-const pool = await connection()
+import { connection } from "../../db/database.js";
+const pool = await connection();
 
-
-//GET
-export const getLibros = async(req, res) => {
-
-    let limit = req.query.limit ? parseInt( req.query.limit ) : 8;
-
-    if(isNaN(limit) || limit <= 0) {
-       return res.status(400).json({ error: "el limite debe ser un numero valido" })
-    }
-
-    try {
-        const [result] = await pool.query(`
-    SELECT 
-        l.id_libro, 
-        l.titulo, 
-        l.descripcion, 
-        l.precio, 
-        l.url_image AS imagen, 
-        a.nombre AS nombre_autor 
-    FROM libros l 
-    INNER JOIN libros_autores la ON l.id_libro = la.id_libro 
-    INNER JOIN autores a ON la.id_autor = a.id_autor 
-    ORDER BY RAND()
-    LIMIT ? ;
-`, [limit])
-        res.send(result)
-    } catch(error) {
-        console.log(error.message)
-    }
-
-}
-
-export const getLibrosFiltroAvanzado = async (req, res) => {
+export const getLibros = async (req, res) => {
     const { autor, editorial, categoria } = req.query;
+    
+    let limit = req.query.limit ? parseInt(req.query.limit) : 8;
+    if (isNaN(limit) || limit <= 0) {
+        return res.status(400).json({ error: "el limite debe ser un numero valido" });
+    }
 
     try {
+        const parametros = [];
+
         let sqlQuery = `
             SELECT 
                 libros.id_libro,
@@ -47,48 +22,50 @@ export const getLibrosFiltroAvanzado = async (req, res) => {
                 editoriales.nombre AS nombre_editorial,
                 categorias.nombre AS nombre_categorias
             FROM libros
-            -- Unimos autores mediante su tabla puente
+            
+            -- Unión de Autores (Con filtro inteligente si existe)
             LEFT JOIN libros_autores ON libros.id_libro = libros_autores.id_libro
+                ${autor ? 'AND libros_autores.id_autor = ?' : ''}
             LEFT JOIN autores ON libros_autores.id_autor = autores.id_autor
-            -- Unimos categorías mediante su tabla puente
+            
+            -- Unión de Categorías (¡Aquí se resuelve tu problema!)
             LEFT JOIN libros_categorias ON libros.id_libro = libros_categorias.id_libro
+                ${categoria ? 'AND libros_categorias.id_categoria = ?' : ''}
             LEFT JOIN categorias ON libros_categorias.id_categoria = categorias.id_categoria
-            -- Unimos editoriales
+            
+            -- Unión de Editoriales (Con filtro inteligente si existe)
             LEFT JOIN editoriales ON libros.id_editorial = editoriales.id_editorial
-            WHERE 1=1
+                ${editorial ? 'AND libros.id_editorial = ?' : ''}
         `;
-
-        const parametros = [];
-
-        // Si el usuario selecciona un AUTOR en el frontend
-        if (autor) {
-            sqlQuery += " AND libros_autores.id_autor = ? ";
-            parametros.push(autor);
-        }
-
-        // Si el usuario selecciona una EDITORIAL en el frontend
-        if (editorial) {
-            sqlQuery += " AND libros.id_editorial = ? ";
-            parametros.push(editorial);
-        }
-
-        // Si el usuario selecciona un GÉNERO en el frontend
-        if (categoria) {
-            sqlQuery += " AND libros_categorias.id_categoria = ? ";
-            parametros.push(categoria);
-        }
-
-        const [resultado] = await pool.query(sqlQuery, parametros);
-
-        if(resultado.length <= 0 ) {
-            res.send(`No existe  ${autor, editorial, categoria} `)
-        }
         
-        // Devolvemos el array con TODOS los libros encontrados
-        res.json(resultado);
+        if (autor) parametros.push(autor);
+        if (categoria) parametros.push(categoria);
+        if (editorial) parametros.push(editorial);
+
+        if (autor || editorial || categoria) {
+            
+            sqlQuery += " WHERE 1=1 ";
+            if (autor) sqlQuery += " AND autores.nombre IS NOT NULL ";
+            if (categoria) sqlQuery += " AND categorias.nombre IS NOT NULL ";
+            if (editorial) sqlQuery += " AND editoriales.nombre IS NOT NULL ";
+
+            sqlQuery += " LIMIT ? ;";
+            parametros.push(limit);
+
+            const [resultado] = await pool.query(sqlQuery, parametros);
+            return res.json(resultado);
+
+        } else {
+            
+            sqlQuery += " ORDER BY RAND() LIMIT ? ;";
+            parametros.push(limit);
+
+            const [resultado] = await pool.query(sqlQuery, parametros);
+            return res.json(resultado);
+        }
 
     } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ error: "Error en el servidor" });
+        console.error("Error en el servidor:", error.message);
+        return res.status(500).json({ error: "Error en el servidor" });
     }
 };
