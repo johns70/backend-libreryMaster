@@ -12,14 +12,21 @@ export const getLibros = async (req, res) => {
     try {
         const parametros = [];
 
-        let sqlQuery = `
+       let sqlQuery = `
             SELECT 
                 libros.id_libro,
                 libros.titulo,
                 libros.precio,
                 libros.url_image AS imagen,
+                
+                -- ¡AGREGADOS LOS IDS INDEPENDIENTES AQUÍ!
+                autores.id_autor AS id_autor,
                 autores.nombre AS nombre_autor,
+                
+                editoriales.id_editorial AS id_editorial,
                 editoriales.nombre AS nombre_editorial,
+                
+                categorias.id_categoria AS id_categoria,
                 categorias.nombre AS nombre_categorias
             FROM libros
             
@@ -28,7 +35,7 @@ export const getLibros = async (req, res) => {
                 ${autor ? 'AND libros_autores.id_autor = ?' : ''}
             LEFT JOIN autores ON libros_autores.id_autor = autores.id_autor
             
-            -- Unión de Categorías (¡Aquí se resuelve tu problema!)
+            -- Unión de Categorías
             LEFT JOIN libros_categorias ON libros.id_libro = libros_categorias.id_libro
                 ${categoria ? 'AND libros_categorias.id_categoria = ?' : ''}
             LEFT JOIN categorias ON libros_categorias.id_categoria = categorias.id_categoria
