@@ -76,3 +76,22 @@ export const getLibros = async (req, res) => {
         return res.status(500).json({ error: "Error en el servidor" });
     }
 };
+
+
+// 1. Endpoint para traer TODOS los autores (Sin límites, sin random)
+export const getAutores = async (req, res) => {
+    const [resultado] = await pool.query(`SELECT id_autor, nombre FROM autores ORDER BY nombre DESC;`);
+    return res.json(resultado);
+};
+
+// 2. Endpoint para traer TODAS las editoriales
+export const getEditoriales = async (req, res) => {
+    const [resultado] = await pool.query(`SELECT id_editorial, nombre FROM editoriales ORDER BY nombre DESC;`);
+    return res.json(resultado);
+};
+
+// 3. Endpoint para traer TODAS las categorías
+export const getCategorias = async (req, res) => {
+    const [resultado] = await pool.query(`SELECT id_categoria, nombre FROM categorias ORDER BY nombre DESC;`);
+    return res.json(resultado);
+}
