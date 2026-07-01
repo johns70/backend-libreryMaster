@@ -1,3 +1,6 @@
+import  jwt  from "jsonwebtoken";   
+import bcrypt from "bcrypt"
+import cookieParser from "cookie-parser";
 import { connection } from "../../db/database.js";
 const pool = await connection();
 
@@ -94,4 +97,78 @@ export const getEditoriales = async (req, res) => {
 export const getCategorias = async (req, res) => {
     const [resultado] = await pool.query(`SELECT id_categoria, nombre FROM categorias ORDER BY nombre DESC;`);
     return res.json(resultado);
+}
+
+//inicio de Sesion
+export const login = async (req, res) => {
+    const { correo, password } = req.body
+
+    try {
+        const [row] = await pool.query(`SELECT * FROM usuarios WHERE correo = ?`, [correo])
+        if(row.length === 0) {
+            res.status(404).json({ message: `El usuario no existe` })
+        }
+
+        const usuario = row[0]
+        const passwordCorecto = await bcrypt.compare(password, usuario.password)
+
+        if(!passwordCorecto) {
+            return res.status(401).json({ message: `Contraseña incorrecta` })
+        }
+
+        const token = jwt.sign(
+            {id: usuario.id_usuario, rol: usuario.rol},
+            process.env.JWT_SECRET ,
+            { expiresIn: '1h' }
+        )
+
+        console.log(process.env.JWT_SECRET)
+
+        res
+        .cookie('acces_token', token, {
+            httpOnly: true, //la cookie solo puede accederce en el servidor
+            secure: process.env.NODE_ENV === 'production', // la cookie solo se accede por https
+            sameSite: 'strict', // la cookie solo puede accederce en el mismo dominio
+            maxAge: 1000 * 60 * 60 // la duracion de la cookie 1hr
+        })
+        .status(200)
+        .json({
+            message: "Login exitoso",
+            token,
+            usuario: { nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol }
+        })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error en el login.' });
+    }
+}
+
+export const registrar = async (req, res) => {
+    const { nombre, password ,correo} = req.body
+
+    try {
+        const [existe] = await pool.query(`SELECT * FROM usuarios WHERE correo = ?`, [correo])
+        if(existe.length > 0 ) {
+            return res.status(400).json({ message:`El correo ya esta registrado` })
+        } 
+
+        const salt = await bcrypt.genSalt(10)
+        const passwordEncripatado = await bcrypt.hash(password, salt)
+
+        await pool.query(`INSERT INTO usuarios(nombre, correo, password) VALUES (?, ?, ?)`, [nombre, correo, passwordEncripatado])
+
+        res.status(201).json({ message: `Usuario registrado con exito` })
+    } 
+    catch(error) {
+        console.error(error)
+        res.status(500).json({ message: 'Error al registrar usuario.' });
+    }
+}
+
+export const logout = async(req, res) => {
+
+}
+
+export const Protect = async(req, res) => {
+
 }
