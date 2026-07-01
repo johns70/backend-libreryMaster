@@ -7,9 +7,23 @@ const app = express()
 //MIddlewares
 app.use(express.json())
 app.use(cookieParser())
+const origenesPermitidos = [
+  'http://localhost:5500',
+  'http://127.0.0.1:5500'
+];
+
 app.use(cors({
-    origin: 'http://localhost:5500', // El puerto exacto donde corre tu Frontend local
-    credentials: true                // Permite el intercambio de cookies HttpOnly
+    origin: function (origin, callback) {
+        // Permitir peticiones sin origen (como Postman o peticiones del mismo servidor)
+        if (!origin) return callback(null, true);
+        
+        if (origenesPermitidos.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Bloqueado por CORS'));
+        }
+    },
+    credentials: true // Crucial para tus cookies HttpOnly
 }));
 app.use(morgan('dev'))
 app.use(router)
