@@ -125,7 +125,7 @@ export const login = async (req, res) => {
         console.log(process.env.JWT_SECRET)
 
         res
-        .cookie('acces_token', token, {
+        .cookieParser('acces_token', token, {
             httpOnly: true, //la cookie solo puede accederce en el servidor
             secure: process.env.NODE_ENV === 'production', // la cookie solo se accede por https
             sameSite: 'strict', // la cookie solo puede accederce en el mismo dominio
