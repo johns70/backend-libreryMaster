@@ -106,7 +106,7 @@ export const login = async (req, res) => {
     try {
         const [row] = await pool.query(`SELECT * FROM usuarios WHERE correo = ?`, [correo])
         if(row.length === 0) {
-            res.status(404).json({ message: `El usuario no existe` })
+           return res.status(404).json({ message: `El usuario no existe` })
         }
 
         const usuario = row[0]
@@ -125,10 +125,10 @@ export const login = async (req, res) => {
         console.log(process.env.JWT_SECRET)
 
         res
-        .cookieParser('acces_token', token, {
+        .cookie('acces_token', token, {
             httpOnly: true, //la cookie solo puede accederce en el servidor
             secure: process.env.NODE_ENV === 'production', // la cookie solo se accede por https
-            sameSite: 'strict', // la cookie solo puede accederce en el mismo dominio
+            sameSite: 'none', // la cookie solo puede accederce en el mismo dominio
             maxAge: 1000 * 60 * 60 // la duracion de la cookie 1hr
         })
         .status(200)
