@@ -170,5 +170,66 @@ export const logout = async(req, res) => {
 }
 
 export const Protect = async(req, res) => {
+    const token = req.cookies.acces_token;
+
+    // 2. Si no hay cookie, rebotar al usuario
+    if (!token) {
+        return res.status(401).json({ message: "No autorizado, debes iniciar sesión" });
+    }
+
+    try {
+        // 3. Verificar que la cookie no haya expirado ni haya sido alterada
+        const decodificado = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // 4. Guardar los datos del usuario (id y rol) dentro del objeto 'req'
+        req.usuario = decodificado;
+
+        // 5. 'next()' le dice a Express: "Todo en orden, puedes pasar al controlador"
+        next(); 
+    } catch (error) {
+        return res.status(403).json({ message: "Sesión inválida o expirada" });
+    }
+}
+
+
+export const obtenerPerfil = async(req, res) => {
+    // GET: Traemos los datos para mostrarlos en la pantalla de perfil
+    try {
+        const { id_usuario } = req.params;
+
+        const [filas] = await db.query(
+        'SELECT id_usuario, nombre, correo, telefono, pais, direccion, ciudad, cod_postal, rol FROM usuarios WHERE id_usuario = ?',
+        [id_usuario]
+        );
+
+        if (filas.length === 0) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        res.json(filas[0]);
+    } catch (error) {
+        console.error('Error al obtener perfil:', error);
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+}
+
+// PUT: Guarda los datos editados por el usuario
+export const actualizarPerfil = async(req, res) => {
+    try {
+        const { id_usuario, telefono, pais, direccion, ciudad, cod_postal } = req.body;
+
+        await db.query(
+        `UPDATE usuarios 
+        SET telefono = ?, pais = ?, direccion = ?, ciudad = ?, cod_postal = ? 
+        WHERE id_usuario = ?`,
+        [telefono, pais, direccion, ciudad, cod_postal, id_usuario]
+        );
+
+        res.json({ mensaje: 'Perfil actualizado con éxito' });
+    } catch (error) {
+        console.error('Error al actualizar perfil:', error);
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+    
 
 }
